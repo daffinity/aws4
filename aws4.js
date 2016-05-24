@@ -219,8 +219,8 @@ RequestSigner.prototype.canonicalString = function() {
       if (normalizePath && piece === '..') {
         path.pop()
       } else if (!normalizePath || piece !== '.') {
-        if (decodePath) piece = querystring.unescape(piece)
-        path.push(encodeRfc3986(querystring.escape(piece)))
+        if (decodePath) piece = querystring.parse(piece)
+        path.push(encodeRfc3986(querystring.stringify(piece)))
       }
       return path
     }, []).join('/')
@@ -289,7 +289,7 @@ RequestSigner.prototype.parsePath = function() {
   // So if there are non-reserved chars (and it's not already all % encoded), just encode them all
   if (/[^0-9A-Za-z!'()*\-._~%/]/.test(path)) {
     path = path.split('/').map(function(piece) {
-      return querystring.escape(querystring.unescape(piece))
+      return querystring.stringify(querystring.parse(piece))
     }).join('/')
   }
 
