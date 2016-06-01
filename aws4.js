@@ -206,7 +206,7 @@ RequestSigner.prototype.canonicalString = function() {
         'UNSIGNED-PAYLOAD' : hash(this.request.body || '', 'hex')
 
   if (query) {
-    queryStr = encodeRfc3986(querystring.stringify(Object.keys(query).sort().reduce(function(obj, key) {
+    queryStr = encodeRfc3986(querystring.escape(Object.keys(query).sort().reduce(function(obj, key) {
       if (!key) return obj
       obj[key] = !Array.isArray(query[key]) ? query[key] :
         (firstValOnly ? query[key][0] : query[key].slice().sort())
@@ -219,8 +219,8 @@ RequestSigner.prototype.canonicalString = function() {
       if (normalizePath && piece === '..') {
         path.pop()
       } else if (!normalizePath || piece !== '.') {
-        if (decodePath) piece = querystring.parse(piece)
-        path.push(encodeRfc3986(querystring.stringify(piece)))
+        if (decodePath) piece = querystring.unescape(piece)
+        path.push(encodeRfc3986(querystring.escape(piece)))
       }
       return path
     }, []).join('/')
@@ -280,7 +280,7 @@ RequestSigner.prototype.parsePath = function() {
       query = null
 
   if (queryIx >= 0) {
-    query = querystring.parse(path.slice(queryIx + 1))
+    query = querystring.unescape(path.slice(queryIx + 1))
     path = path.slice(0, queryIx)
   }
 
@@ -289,7 +289,7 @@ RequestSigner.prototype.parsePath = function() {
   // So if there are non-reserved chars (and it's not already all % encoded), just encode them all
   if (/[^0-9A-Za-z!'()*\-._~%/]/.test(path)) {
     path = path.split('/').map(function(piece) {
-      return querystring.stringify(querystring.parse(piece))
+      return querystring.escape(querystring.unescape(piece))
     }).join('/')
   }
 
@@ -308,7 +308,7 @@ RequestSigner.prototype.formatPath = function() {
   // Services don't support empty query string keys
   if (query[''] != null) delete query['']
 
-  return path + '?' + encodeRfc3986(querystring.stringify(query))
+  return path + '?' + encodeRfc3986(querystring.escape(query))
 }
 
 aws4.RequestSigner = RequestSigner
